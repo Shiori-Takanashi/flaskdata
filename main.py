@@ -14,6 +14,23 @@ def get_db_connection():
     conn.text_factory = lambda b: b.decode("utf-8", errors="replace")
     return conn
 
+@app.route('/')
+def index():
+    # シンプルなHTMLを返すエントリーページ
+    return '''
+    <!DOCTYPE html>
+    <html lang="ja">
+      <head>
+        <meta charset="UTF-8">
+        <title>エントリーページ</title>
+      </head>
+      <body>
+        <h1>ようこそ！</h1>
+        <p>これはFlaskアプリのエントリーページです。</p>
+      </body>
+    </html>
+    '''
+
 @app.route('/random', methods=['GET'])
 def get_random_data():
     conn = get_db_connection()
@@ -37,4 +54,4 @@ def get_random_data():
         return Response(response_body, content_type="application/json; charset=utf-8", status=404)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=False)
