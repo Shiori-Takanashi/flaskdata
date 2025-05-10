@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>App Doc</title>
+    <link href="../hidden/json-viewer.css" rel="stylesheet">
+    <script src="../hidden/json-viewer.js" defer></script>
+</head>
+
+<body>
+    <h1>APIドキュメント</h1>
+    <div id="jsonarea"></div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const container = document.getElementById("jsonarea");
+            const viewer = new JSONViewer();
+            container.appendChild(viewer.getContainer());
+
+            fetch("../hidden/blissey.json")
+                .then(res => res.json())
+                .then(data => viewer.showJSON(data, null, 2));
+        });
+    </script>
+</body>
+
+</html>

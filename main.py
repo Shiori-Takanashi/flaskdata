@@ -12,26 +12,12 @@ DATABASE = 'db.sqlite3'
 def get_db_connection():
     conn = sqlite3.connect(DATABASE)
     conn.row_factory = sqlite3.Row
-    # UTF-8でデコード（エラー発生時は置換）
     conn.text_factory = lambda b: b.decode("utf-8", errors="replace")
     return conn
 
 @app.route('/')
 def index():
-    # シンプルなHTMLを返すエントリーページ
-    return '''
-    <!DOCTYPE html>
-    <html lang="ja">
-      <head>
-        <meta charset="UTF-8">
-        <title>エントリーページ</title>
-      </head>
-      <body>
-        <h1>ようこそ！</h1>
-        <p>これはFlaskアプリのエントリーページです。</p>
-      </body>
-    </html>
-    '''
+    return render_template('index.html')
 
 @app.route('/random', methods=['GET'])
 def get_random_data():
