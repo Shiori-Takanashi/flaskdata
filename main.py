@@ -1,4 +1,4 @@
-from flask import Flask, Response
+from flask import Flask, Response, render_template
 import sqlite3
 import json
 from flask_cors import CORS
