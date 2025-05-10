@@ -3,26 +3,147 @@
 
 <head>
     <meta charset="UTF-8" />
-    <title>App Doc</title>
-    <link href="../hidden/json-viewer.css" rel="stylesheet">
-    <script src="../hidden/json-viewer.js" defer></script>
+    <title>APIドキュメント</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/assets/json-viewer.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            background-color: #d4ebff;
+            color: #333;
+            font-family: sans-serif;
+        }
+
+        #container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        header h1 {
+            margin-bottom: 0.5rem;
+            font-size: 1.5rem;
+        }
+
+        #description {
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        #toolbar {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        #toolbar button {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.4rem 0.8rem;
+            border: 1px solid #aaa;
+            background: #f5f5f5;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        #toolbar button:hover {
+            background: #e0e0e0;
+        }
+
+        #loader {
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top-color: #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 6rem auto;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #json-area {
+            display: none;
+            background: #fff;
+            padding: 1rem;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+            max-height: 70vh;
+            overflow: auto;
+            font-family: "Source Code Pro", monospace;
+            font-size: 1.2rem;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 
 <body>
-    <h1>APIドキュメント</h1>
-    <div id="jsonarea"></div>
+    <div id="container">
+        <header>
+            <h1>APIドキュメント</h1>
+            <div id="description">
+                <p><code>GET /sample/blissey.json</code> のサンプルレスポンスを表示します。</p>
+            </div>
+        </header>
 
+        <div id="toolbar">
+            <button id="btnCopy"><i class="fa fa-copy"></i> コピー</button>
+            <button id="btnDownload"><i class="fa fa-download"></i> ダウンロード</button>
+        </div>
+        <div id="loader"></div>
+        <div id="json-area"></div>
+    </div>
+
+    <script src="/assets/json-viewer.js" defer></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            const container = document.getElementById("jsonarea");
+            const loader = document.getElementById("loader");
+            const area = document.getElementById("json-area");
             const viewer = new JSONViewer();
-            container.appendChild(viewer.getContainer());
+            area.appendChild(viewer.getContainer());
 
-            fetch("../hidden/blissey.json")
+            const start = Date.now();
+
+            fetch("/sample/blissey.json")
                 .then(res => res.json())
-                .then(data => viewer.showJSON(data, null, 2));
+                .then(data => {
+                    const elapsed = Date.now() - start;
+                    const wait = Math.max(0, 1500 - elapsed);
+
+                    setTimeout(() => {
+                        viewer.showJSON(data, null, 2);
+                        loader.style.display = "none";
+                        area.style.display = "block";
+
+                        // コピー・ダウンロードのイベントはこの中で viewer が確実に定義されているときに付ける
+                        document.getElementById("btnCopy").addEventListener("click", () => {
+                            const text = JSON.stringify(viewer.get(), null, 2);
+                            navigator.clipboard.writeText(text);
+                        });
+
+                        document.getElementById("btnDownload").addEventListener("click", () => {
+                            const blob = new Blob([JSON.stringify(viewer.get(), null, 2)], { type: "application/json" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = "blissey.json";
+                            a.click();
+                            URL.revokeObjectURL(url);
+                        });
+                    }, wait);
+                })
+                .catch(() => {
+                    loader.textContent = "データ取得エラー";
+                });
         });
     </script>
+
 </body>
 
 </html>

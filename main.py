@@ -1,9 +1,9 @@
-from flask import Flask, Response, render_template
+from flask import Flask, Response, render_template, send_from_directory
 import sqlite3
 import json
 from flask_cors import CORS
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=None)
 
 CORS(app)
 
@@ -18,6 +18,16 @@ def get_db_connection():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+@app.route("/assets/<path:filename>")
+def serve_asset(filename):
+    return send_from_directory("static_assets", filename)
+
+@app.route("/sample/<path:filename>")
+def serve_sample(filename):
+    return send_from_directory("static_sample", filename)
+
 
 @app.route('/random', methods=['GET'])
 def get_random_data():
