@@ -3,10 +3,10 @@
 
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>APIドキュメント</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="/assets/json-viewer.css" rel="stylesheet">
+    <link href="/css/all.min.css" rel="stylesheet">
     <style>
         body {
             margin: 0;
@@ -17,16 +17,8 @@
 
         #container {
             max-width: 90vw;
-            margin: 4rem auto;
+            margin: 1rem auto 4rem auto;
             padding: 0 1rem;
-        }
-
-        @media (max-width: 320px) {
-            #container {
-                max-width: 280px;
-                margin: 2rem auto;
-                padding: 0 1rem;
-            }
         }
 
         header h1 {
@@ -78,25 +70,40 @@
             }
         }
 
-        #json-area {
-            display: none;
+        .scroll-wrapper {
+            position: relative;
             background: #fff;
             box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
-            max-height: 60vh;
-            overflow: auto;
-            font-family: "Source Code Pro", monospace;
-            font-size: 0.9rem;
             border-radius: 4px;
         }
 
-        @media (max-width: 320px) {
-            #json-area {
-                height: 80vh;
+        #json-area {
+            height: 100%;
+            overflow: auto;
+            padding: 1rem;
+            font-family: "Source Code Pro", monospace;
+            font-size: 0.9rem;
+        }
+
+        .list-link {
+            display: none;
+        }
+
+        @media (max-width: 375px) {
+            #container {
+                max-width: 340px;
+                margin: 2rem auto;
+                padding: 0 1rem;
+            }
+
+            .scroll-wrapper {
+                max-height: 80vh;
             }
         }
 
-        [data-level] {
+        [data-level="0"] {
             padding: 0px !important;
+            border-left-width: 0px !important;
         }
     </style>
 </head>
@@ -105,79 +112,84 @@
     <div id="container">
         <header>
             <h1>APIドキュメント</h1>
-            <div id="description">
-                <code>GET /heroku.playingbirds.site/random</code>
-            </div>
+            <div id="description"><code>GET /heroku.playingbirds.site/random</code></div>
         </header>
 
         <div id="toolbar">
-            <button id="btnUpdata"><i class="fa fa-rotate-right"></i>更新</button>
-            <button id="btnCopy"><i class="fa fa-copy"></i> コピー</button>
-            <button id="btnDownload"><i class="fa fa-download"></i> ダウンロード</button>
+            <button id="btnUpdate"><i class="fas fa-rotate-right"></i>更新</button>
+            <button id="btnCopy"><i class="fas fa-copy"></i> コピー</button>
+            <button id="btnDownload"><i class="fas fa-download"></i> ダウンロード</button>
         </div>
+
         <div id="loader"></div>
-        <div id="json-area"></div>
+
+        <div class="scroll-wrapper" id="json-wrapper">
+            <div id="json-area"></div>
+        </div>
     </div>
 
     <script src="/assets/json-viewer.js" defer></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const loader = document.getElementById("loader");
+            const wrapper = document.getElementById("json-wrapper");
             const area = document.getElementById("json-area");
             const viewer = new JSONViewer();
             area.appendChild(viewer.getContainer());
 
-            const fetchAndRender = (url) => {
+            let latestData = null;
+            const MIN_WAIT_MS = 1500;
+
+            function fetchAndRender(url) {
                 const start = Date.now();
                 loader.style.display = "block";
-                area.style.display = "none";
+                wrapper.style.display = "none";
 
                 fetch(url)
                     .then(res => res.json())
                     .then(data => {
+                        latestData = data;
                         const elapsed = Date.now() - start;
-                        const wait = Math.max(0, 1500 - elapsed);
+                        const wait = Math.max(0, MIN_WAIT_MS - elapsed);
 
                         setTimeout(() => {
                             const container = viewer.getContainer();
-                            container.innerHTML = ""; // ← 前回の表示を明示的に消す
-                            viewer.showJSON(JSON.parse(JSON.stringify(data)), null, 2);
+                            container.innerHTML = "";
+                            viewer.showJSON(data, null, 2);
                             loader.style.display = "none";
-                            area.style.display = "block";
+                            wrapper.style.display = "block";
                         }, wait);
                     })
                     .catch(() => {
                         loader.textContent = "データ取得エラー";
                     });
-            };
+            }
 
+            fetchAndRender("/sample/sample.json");
 
-            // 初回読み込み
-            fetchAndRender("/sample/blissey.json");
-
-            // 更新ボタン
-            document.getElementById("btnUpdata").addEventListener("click", () => {
+            document.getElementById("btnUpdate").addEventListener("click", () => {
                 fetchAndRender("https://heroku.playingbirds.site/random");
             });
 
-            // コピー・ダウンロード（定数はDOMContentLoaded内で1回定義しておいてよい）
             document.getElementById("btnCopy").addEventListener("click", () => {
-                const text = JSON.stringify(viewer.get(), null, 2);
-                navigator.clipboard.writeText(text);
+                if (latestData !== null) {
+                    navigator.clipboard.writeText(JSON.stringify(latestData, null, 2));
+                }
             });
 
             document.getElementById("btnDownload").addEventListener("click", () => {
-                const blob = new Blob([JSON.stringify(viewer.get(), null, 2)], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "sample.json";
-                a.click();
-                URL.revokeObjectURL(url);
+                if (latestData !== null) {
+                    const blob = new Blob([JSON.stringify(latestData, null, 2)], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "sample.json";
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
             });
         });
     </script>
-
 </body>
 
 </html>

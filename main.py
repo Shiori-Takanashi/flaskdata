@@ -28,6 +28,14 @@ def serve_asset(filename):
 def serve_sample(filename):
     return send_from_directory("static_sample", filename)
 
+@app.route("/css/<path:filename>")
+def serve_css(filename):
+    return send_from_directory("static_css", filename)
+
+@app.route("/webfonts/<path:filename>")
+def serve_webfonts(filename):
+    return send_from_directory("static_webfonts", filename)
+
 
 @app.route('/random', methods=['GET'])
 def get_random_data():
