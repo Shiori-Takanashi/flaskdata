@@ -20,6 +20,14 @@
             padding: 0 1rem;
         }
 
+        @media (max-width: 320px) {
+            #container {
+                max-width: 300px;
+                margin: 2rem auto;
+                padding: 0 1rem;
+            }
+        }
+
         header h1 {
             margin-bottom: 0.5rem;
             font-size: 1.5rem;
@@ -88,11 +96,12 @@
         <header>
             <h1>APIドキュメント</h1>
             <div id="description">
-                <p><code>GET /sample/blissey.json</code> のサンプルレスポンスを表示します。</p>
+                <p><code>GET /heroku.playingbirds.site/random</code> のサンプルレスポンスを表示します。</p>
             </div>
         </header>
 
         <div id="toolbar">
+            <button id="btnUpdata"><i class="fa fa-redo"></i>更新</button>
             <button id="btnCopy"><i class="fa fa-copy"></i> コピー</button>
             <button id="btnDownload"><i class="fa fa-download"></i> ダウンロード</button>
         </div>
@@ -108,39 +117,54 @@
             const viewer = new JSONViewer();
             area.appendChild(viewer.getContainer());
 
-            const start = Date.now();
+            const fetchAndRender = (url) => {
+                const start = Date.now();
+                loader.style.display = "block";
+                area.style.display = "none";
 
-            fetch("/sample/blissey.json")
-                .then(res => res.json())
-                .then(data => {
-                    const elapsed = Date.now() - start;
-                    const wait = Math.max(0, 1500 - elapsed);
+                fetch(url)
+                    .then(res => res.json())
+                    .then(data => {
+                        const elapsed = Date.now() - start;
+                        const wait = Math.max(0, 1500 - elapsed);
 
-                    setTimeout(() => {
-                        viewer.showJSON(data, null, 2);
-                        loader.style.display = "none";
-                        area.style.display = "block";
+                        setTimeout(() => {
+                            const container = viewer.getContainer();
+                            container.innerHTML = ""; // ← 前回の表示を明示的に消す
+                            viewer.showJSON(JSON.parse(JSON.stringify(data)), null, 2);
+                            loader.style.display = "none";
+                            area.style.display = "block";
+                        }, wait);
+                    })
+                    .catch(() => {
+                        loader.textContent = "データ取得エラー";
+                    });
+            };
 
-                        // コピー・ダウンロードのイベントはこの中で viewer が確実に定義されているときに付ける
-                        document.getElementById("btnCopy").addEventListener("click", () => {
-                            const text = JSON.stringify(viewer.get(), null, 2);
-                            navigator.clipboard.writeText(text);
-                        });
 
-                        document.getElementById("btnDownload").addEventListener("click", () => {
-                            const blob = new Blob([JSON.stringify(viewer.get(), null, 2)], { type: "application/json" });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = "blissey.json";
-                            a.click();
-                            URL.revokeObjectURL(url);
-                        });
-                    }, wait);
-                })
-                .catch(() => {
-                    loader.textContent = "データ取得エラー";
-                });
+            // 初回読み込み
+            fetchAndRender("/sample/blissey.json");
+
+            // 更新ボタン
+            document.getElementById("btnUpdata").addEventListener("click", () => {
+                fetchAndRender("https://heroku.playingbirds.site/random");
+            });
+
+            // コピー・ダウンロード（定数はDOMContentLoaded内で1回定義しておいてよい）
+            document.getElementById("btnCopy").addEventListener("click", () => {
+                const text = JSON.stringify(viewer.get(), null, 2);
+                navigator.clipboard.writeText(text);
+            });
+
+            document.getElementById("btnDownload").addEventListener("click", () => {
+                const blob = new Blob([JSON.stringify(viewer.get(), null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "sample.json";
+                a.click();
+                URL.revokeObjectURL(url);
+            });
         });
     </script>
 
