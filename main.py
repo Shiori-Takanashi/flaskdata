@@ -2,6 +2,7 @@ from flask import Flask, Response, render_template, send_from_directory
 import sqlite3
 import json
 from flask_cors import CORS
+import time, random
 
 app = Flask(__name__, static_folder=None)
 
@@ -78,7 +79,25 @@ def get_species_by_id(idx):
         response_body = json.dumps({'error': '指定されたIDのデータが見つかりません'}, ensure_ascii=False)
         return Response(response_body, content_type="application/json; charset=utf-8", status=404)
 
+@app.route('/species/<int:idx>', methods=['GET'])
+def get_species_by_id_with_delay(idx):
+    idx_str = str(idx).zfill(5)
 
+    conn = get_db_connection()
+    query = 'SELECT * FROM pokedex_pokemon WHERE species_id = ?'
+    cur = conn.execute(query, (idx_str,))
+    row = cur.fetchone()
+    conn.close()
+
+    time.sleep(random.randint(3,6))
+
+    if row:
+        data = dict(row)
+        response_body = json.dumps(data, ensure_ascii=False)
+        return Response(response_body, content_type="application/json; charset=utf-8")
+    else:
+        response_body = json.dumps({'error': '指定されたIDのデータが見つかりません'}, ensure_ascii=False)
+        return Response(response_body, content_type="application/json; charset=utf-8", status=404)
 
 
 
