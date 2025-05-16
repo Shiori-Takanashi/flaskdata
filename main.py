@@ -98,10 +98,3 @@ def get_species_by_id_with_delay(idx):
     else:
         response_body = json.dumps({'error': '指定されたIDのデータが見つかりません'}, ensure_ascii=False)
         return Response(response_body, content_type="application/json; charset=utf-8", status=404)
-
-
-
-
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=False)
