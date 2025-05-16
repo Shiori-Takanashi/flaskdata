@@ -89,7 +89,7 @@ def get_species_by_id_with_delay(idx):
     row = cur.fetchone()
     conn.close()
 
-    time.sleep(random.randint(3,6))
+    time.sleep(random.randint(1,3))
 
     if row:
         data = dict(row)
