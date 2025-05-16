@@ -41,10 +41,11 @@ def serve_webfonts(filename):
 def get_random_data():
     conn = get_db_connection()
     query = '''
-        SELECT DISTINCT *
+        SELECT *
         FROM pokedex_pokemon
         WHERE original = 1
-        ORDER BY RANDOM() LIMIT 1
+        ORDER BY RANDOM()
+        LIMIT 1
     '''
     cur = conn.execute(query)
     row = cur.fetchone()
@@ -58,6 +59,30 @@ def get_random_data():
     else:
         response_body = json.dumps({"error": "データが見つかりません"}, ensure_ascii=False)
         return Response(response_body, content_type="application/json; charset=utf-8", status=404)
+
+@app.route('/species/<int:idx>', methods=['GET'])
+def get_species_by_id(idx):
+    idx_str = str(idx).zfill(5)
+
+    conn = get_db_connection()
+    query = 'SELECT * FROM pokedex_pokemon WHERE species_id = ?'
+    cur = conn.execute(query, (idx_str,))
+    row = cur.fetchone()
+    conn.close()
+
+    if row:
+        data = dict(row)
+        response_body = json.dumps(data, ensure_ascii=False)
+        return Response(response_body, content_type="application/json; charset=utf-8")
+    else:
+        response_body = json.dumps({'error': '指定されたIDのデータが見つかりません'}, ensure_ascii=False)
+        return Response(response_body, content_type="application/json; charset=utf-8", status=404)
+
+
+
+
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080, debug=False)
