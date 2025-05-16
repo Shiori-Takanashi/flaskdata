@@ -79,7 +79,7 @@ def get_species_by_id(idx):
         response_body = json.dumps({'error': '指定されたIDのデータが見つかりません'}, ensure_ascii=False)
         return Response(response_body, content_type="application/json; charset=utf-8", status=404)
 
-@app.route('/species/<int:idx>', methods=['GET'])
+@app.route('/species/delay/<int:idx>', methods=['GET'])
 def get_species_by_id_with_delay(idx):
     idx_str = str(idx).zfill(5)
 
